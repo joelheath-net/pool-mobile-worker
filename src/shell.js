@@ -101,7 +101,7 @@ export const AppShell = ({ canonicalPath = '/' }) => {
 					</header>
 
 					<button type="button" class="context-selector" data-action="open-table-season-sheet" aria-label="Select season standings">
-						<span class="context-selector-label" data-bind="context-label">Southampton</span>
+						<span class="context-selector-label" data-bind="context-label">Current Season</span>
 						<svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<polyline points="6 9 12 15 18 9"></polyline>
 						</svg>
@@ -170,7 +170,7 @@ export const AppShell = ({ canonicalPath = '/' }) => {
 					</header>
 
 					<button type="button" class="context-selector" data-action="open-table-season-sheet" aria-label="Switch table season">
-						<span id="table-season-label" class="context-selector-label">Southampton</span>
+						<span id="table-season-label" class="context-selector-label">Current Season</span>
 						<svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<polyline points="6 9 12 15 18 9"></polyline>
 						</svg>
@@ -213,7 +213,7 @@ export const AppShell = ({ canonicalPath = '/' }) => {
 					</header>
 
 					<button type="button" class="context-selector" data-action="open-fixtures-filter-sheet" aria-label="Filter fixtures and available players">
-						<span id="fixtures-filter-label" class="context-selector-label" data-bind="context-label">Southampton</span>
+						<span id="fixtures-filter-label" class="context-selector-label" data-bind="context-label">Current Season</span>
 						<svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<polyline points="6 9 12 15 18 9"></polyline>
 						</svg>

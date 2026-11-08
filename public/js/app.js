@@ -216,6 +216,11 @@ function setAuthenticatedUI(isAuthenticated) {
 	const landingEl = document.getElementById('auth-landing');
 	const viewportEl = document.getElementById('views-viewport');
 	const bottomNavEl = document.getElementById('bottom-nav');
+	const signInBtn = document.getElementById('auth-signin-btn');
+
+	if (signInBtn) {
+		signInBtn.href = `/auth/google/login?origin=${encodeURIComponent(window.location.origin)}`;
+	}
 
 	if (isAuthenticated) {
 		if (landingEl) landingEl.hidden = true;
@@ -1131,12 +1136,28 @@ async function handleToggleNotifications() {
    BOTTOM SHEET MODALS
    ========================================================================== */
 
+let closeSheetTimer = null;
+
 function openBottomSheet(innerHtml, onMount) {
 	const backdrop = document.getElementById('sheet-backdrop');
+	const sheet = document.getElementById('bottom-sheet');
 	const content = document.getElementById('sheet-content');
 	if (!backdrop || !content) return;
 
+	if (closeSheetTimer) {
+		clearTimeout(closeSheetTimer);
+		closeSheetTimer = null;
+	}
+
+	if (sheet) {
+		sheet.classList.remove('is-dragging');
+		sheet.style.transform = '';
+	}
+	backdrop.classList.remove('is-dragging');
+	backdrop.style.opacity = '';
+
 	content.innerHTML = innerHtml;
+	content.scrollTop = 0;
 	backdrop.hidden = false;
 	requestAnimationFrame(() => {
 		backdrop.classList.add('is-open');
@@ -1149,12 +1170,209 @@ function openBottomSheet(innerHtml, onMount) {
 
 function closeBottomSheet() {
 	const backdrop = document.getElementById('sheet-backdrop');
+	const sheet = document.getElementById('bottom-sheet');
 	if (!backdrop || backdrop.hidden) return;
 
+	if (sheet) {
+		sheet.classList.remove('is-dragging');
+		sheet.style.transform = '';
+	}
+	backdrop.classList.remove('is-dragging');
+	backdrop.style.opacity = '';
 	backdrop.classList.remove('is-open');
-	setTimeout(() => {
+
+	if (closeSheetTimer) {
+		clearTimeout(closeSheetTimer);
+	}
+	closeSheetTimer = setTimeout(() => {
 		backdrop.hidden = true;
+		closeSheetTimer = null;
 	}, 220);
+}
+
+function initBottomSheetDrag() {
+	const backdrop = document.getElementById('sheet-backdrop');
+	const sheet = document.getElementById('bottom-sheet');
+	const content = document.getElementById('sheet-content');
+	if (!backdrop || !sheet || !content) return;
+
+	let isTracking = false;
+	let isDragging = false;
+	let startedOnHandle = false;
+	let startX = 0;
+	let startY = 0;
+	let dragOriginY = 0;
+	let deltaY = 0;
+	let lastY = 0;
+	let lastTime = 0;
+	let velocityY = 0;
+	let suppressNextClick = false;
+
+	const beginTrack = (clientX, clientY, target) => {
+		if (backdrop.hidden || !backdrop.classList.contains('is-open')) return false;
+		// Do not hijack gestures inside form fields
+		if (target.closest('input, textarea, select')) return false;
+
+		startedOnHandle = Boolean(target.closest('.sheet-handle-bar, .sheet-title'));
+		// If starting inside scrollable content, only allow when scrolled to the very top
+		if (!startedOnHandle && content.scrollTop > 0) return false;
+
+		isTracking = true;
+		isDragging = false;
+		startX = clientX;
+		startY = clientY;
+		dragOriginY = clientY;
+		deltaY = 0;
+		lastY = clientY;
+		lastTime = performance.now();
+		velocityY = 0;
+		return true;
+	};
+
+	const updateTrack = (clientX, clientY, event) => {
+		if (!isTracking) return;
+
+		const rawDx = clientX - startX;
+		const rawDy = clientY - startY;
+
+		if (!isDragging) {
+			// Ignore predominantly horizontal swipes
+			if (Math.abs(rawDx) > Math.abs(rawDy) && Math.abs(rawDx) > 8) {
+				isTracking = false;
+				return;
+			}
+
+			if (startedOnHandle) {
+				if (Math.abs(rawDy) < 4) return;
+			} else {
+				// Inside sheet content: only engage drag when pulling downward at scrollTop === 0
+				if (content.scrollTop > 0 || rawDy < 0) {
+					if (rawDy < -4) isTracking = false;
+					return;
+				}
+				if (rawDy < 7) return;
+			}
+
+			isDragging = true;
+			dragOriginY = clientY;
+			lastY = clientY;
+			lastTime = performance.now();
+			sheet.classList.add('is-dragging');
+			backdrop.classList.add('is-dragging');
+		}
+
+		if (event && event.cancelable) {
+			event.preventDefault();
+		}
+
+		const now = performance.now();
+		const dt = now - lastTime;
+		if (dt > 0) {
+			const instantVy = (clientY - lastY) / dt; // px per ms
+			velocityY = velocityY * 0.35 + instantVy * 0.65;
+			lastY = clientY;
+			lastTime = now;
+		}
+
+		deltaY = clientY - dragOriginY;
+		const sheetHeight = sheet.offsetHeight || 320;
+
+		if (deltaY >= 0) {
+			sheet.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+			const progress = Math.min(1, deltaY / Math.max(sheetHeight, 260));
+			backdrop.style.opacity = String(Math.max(0, 1 - progress * 0.85));
+		} else {
+			// Subtle upward rubber-band resistance
+			const dampedUp = -Math.min(22, Math.pow(Math.abs(deltaY), 0.65) * 1.25);
+			sheet.style.transform = `translate3d(0, ${dampedUp}px, 0)`;
+			backdrop.style.opacity = '1';
+		}
+	};
+
+	const endTrack = (cancelled = false) => {
+		if (!isTracking) return;
+		isTracking = false;
+
+		if (!isDragging) return;
+		isDragging = false;
+		suppressNextClick = true;
+
+		const sheetHeight = sheet.offsetHeight || 320;
+		const dismissDistance = Math.min(105, Math.max(64, sheetHeight * 0.25));
+		const isDownwardFlick = velocityY > 0.42 && deltaY > 22;
+		const shouldDismiss = !cancelled && ((deltaY >= dismissDistance && velocityY > -0.25) || isDownwardFlick);
+
+		if (shouldDismiss) {
+			closeBottomSheet();
+		} else {
+			// Spring back to open state using CSS var(--ease-snappy)
+			sheet.classList.remove('is-dragging');
+			backdrop.classList.remove('is-dragging');
+			sheet.style.transform = '';
+			backdrop.style.opacity = '';
+		}
+	};
+
+	// Touch listeners (iOS / Android PWA)
+	sheet.addEventListener(
+		'touchstart',
+		(e) => {
+			if (e.touches.length !== 1) return;
+			const touch = e.touches[0];
+			beginTrack(touch.clientX, touch.clientY, e.target);
+		},
+		{ passive: true }
+	);
+
+	sheet.addEventListener(
+		'touchmove',
+		(e) => {
+			if (!isTracking || e.touches.length !== 1) return;
+			const touch = e.touches[0];
+			updateTrack(touch.clientX, touch.clientY, e);
+		},
+		{ passive: false }
+	);
+
+	sheet.addEventListener('touchend', () => endTrack(false));
+	sheet.addEventListener('touchcancel', () => endTrack(true));
+
+	// Mouse drag support for desktop/testing on the handle bar
+	let activeMouseMove = null;
+	let activeMouseUp = null;
+
+	sheet.addEventListener('mousedown', (e) => {
+		if (e.button !== 0) return;
+		if (!e.target.closest('.sheet-handle-bar, .sheet-title')) return;
+		if (!beginTrack(e.clientX, e.clientY, e.target)) return;
+
+		activeMouseMove = (moveEvent) => {
+			updateTrack(moveEvent.clientX, moveEvent.clientY, moveEvent);
+		};
+		activeMouseUp = () => {
+			window.removeEventListener('mousemove', activeMouseMove);
+			window.removeEventListener('mouseup', activeMouseUp);
+			activeMouseMove = null;
+			activeMouseUp = null;
+			endTrack(false);
+		};
+
+		window.addEventListener('mousemove', activeMouseMove);
+		window.addEventListener('mouseup', activeMouseUp);
+	});
+
+	// Prevent accidental click trigger immediately after releasing a drag
+	sheet.addEventListener(
+		'click',
+		(e) => {
+			if (suppressNextClick) {
+				suppressNextClick = false;
+				e.stopPropagation();
+				e.preventDefault();
+			}
+		},
+		true
+	);
 }
 
 // 1. Table Season Selector Sheet
@@ -1946,6 +2164,9 @@ function initEventListeners() {
 			closeBottomSheet();
 		}
 	});
+
+	// Drag-to-dismiss gesture on the bottom sheet
+	initBottomSheetDrag();
 }
 
 function initInitialRoute() {

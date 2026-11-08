@@ -10,6 +10,59 @@ function getApiOrigin(c) {
 	return (c.env && c.env.API_ORIGIN) ? c.env.API_ORIGIN.replace(/\/$/, '') : DEFAULT_API_ORIGIN;
 }
 
+function isAllowedClientOrigin(rawOrigin) {
+	if (!rawOrigin) return false;
+	try {
+		const parsed = new URL(rawOrigin);
+		const host = parsed.hostname.toLowerCase();
+		if (host === 'localhost' || host === '127.0.0.1') {
+			return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+		}
+		if (parsed.protocol !== 'https:') return false;
+		return (
+			host === 'joelheath.net' ||
+			host.endsWith('.joelheath.net') ||
+			host.endsWith('.workers.dev')
+		);
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Resolves the browser's true origin.
+ * When `routes` with `custom_domain: true` is present in wrangler.jsonc, `wrangler dev`
+ * rewrites `c.req.url` to `http://mobile.stpaulsleague.joelheath.net/...` while keeping
+ * the real local origin in `mf-original-url`, `referer`, or the `?origin=` query param.
+ */
+function getClientOrigin(c) {
+	const queryOrigin = c.req.query('origin');
+	if (queryOrigin && isAllowedClientOrigin(queryOrigin)) {
+		return new URL(queryOrigin).origin;
+	}
+
+	const mfOriginal = c.req.header('mf-original-url');
+	if (mfOriginal && isAllowedClientOrigin(mfOriginal)) {
+		return new URL(mfOriginal).origin;
+	}
+
+	const referer = c.req.header('referer');
+	if (referer && isAllowedClientOrigin(referer)) {
+		return new URL(referer).origin;
+	}
+
+	const incomingUrl = new URL(c.req.url);
+	if (
+		incomingUrl.protocol === 'http:' &&
+		incomingUrl.hostname !== 'localhost' &&
+		incomingUrl.hostname !== '127.0.0.1'
+	) {
+		return 'http://127.0.0.1:8787';
+	}
+
+	return incomingUrl.origin;
+}
+
 /**
  * Proxy /api/* requests to https://stpaulsleague.joelheath.net/api/*
  * Forwards cookies from the client to the backend API and forwards any
@@ -86,8 +139,8 @@ app.all('/api/*', async (c) => {
  */
 app.get('/auth/google/login', (c) => {
 	const origin = getApiOrigin(c);
-	const incomingUrl = new URL(c.req.url);
-	const returnTo = `${incomingUrl.origin}/auth/token-callback`;
+	const clientOrigin = getClientOrigin(c);
+	const returnTo = `${clientOrigin}/auth/token-callback`;
 	const loginUrl = new URL(`${origin}/auth/google/login`);
 	loginUrl.searchParams.set('return_to', returnTo);
 	return c.redirect(loginUrl.toString());
@@ -95,11 +148,11 @@ app.get('/auth/google/login', (c) => {
 
 app.get('/auth/token-callback', (c) => {
 	const token = c.req.query('token');
-	const incomingUrl = new URL(c.req.url);
+	const clientOrigin = getClientOrigin(c);
 	if (token) {
 		setCookie(c, 'auth_token', token, {
 			path: '/',
-			secure: incomingUrl.protocol === 'https:',
+			secure: clientOrigin.startsWith('https:'),
 			httpOnly: true,
 			maxAge: 60 * 60 * 24 * 30, // 30 days matching main site
 			sameSite: 'Lax'

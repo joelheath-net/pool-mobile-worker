@@ -1,0 +1,16 @@
+{
+	"name": "pool-mobile-worker",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev"
+	},
+	"devDependencies": {
+		"wrangler": "^4.136.1"
+	},
+	"dependencies": {
+		"hono": "^4.8.1"
+	}
+}

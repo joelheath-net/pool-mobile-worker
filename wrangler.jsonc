@@ -1,0 +1,21 @@
+/**
+ * Cloudflare Worker configuration for St Paul's League Mobile App
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "pool-mobile-worker",
+	"main": "src/index.js",
+	"compatibility_date": "2025-06-20",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": "./public"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"API_ORIGIN": "https://stpaulsleague.joelheath.net"
+	}
+}

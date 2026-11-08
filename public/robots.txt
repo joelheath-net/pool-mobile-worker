@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /admin-panel
+Disallow: /log-game
+Disallow: /edit-game
+Disallow: /profile
+Disallow: /audit-log
+
+Sitemap: https://stpaulsleague.joelheath.net/sitemap.xml

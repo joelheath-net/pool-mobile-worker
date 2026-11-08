@@ -70,8 +70,10 @@ export const AppShell = ({ canonicalPath = '/' }) => {
 					<a href="/auth/google/login" class="lime-cta-btn auth-signin-btn">
 						<span class="auth-btn-left">
 							<svg class="google-g-icon" viewBox="0 0 24 24" aria-hidden="true">
-								<path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.81-1.5 3.34-3.2 4.37v3.62h5.18c3.03-2.79 4.78-6.9 4.78-11.78 0-.8-.08-1.57-.23-2.31z"/>
-								<path fill="currentColor" d="M12.18 22c4.32 0 7.95-1.43 10.6-3.88l-5.18-3.62c-1.43.96-3.26 1.53-5.42 1.53-4.17 0-7.7-2.81-8.96-6.6H-2.1v3.73C.54 18.4 5.94 22 12.18 22z" opacity="0.85"/>
+								<path fill="currentColor" d="M21.8 12.23c0-.71-.06-1.4-.19-2.05H12v3.88h5.5c-.24 1.28-.96 2.36-2.05 3.09v2.57h3.31c1.94-1.78 3.04-4.41 3.04-7.49z"/>
+								<path fill="currentColor" d="M12 22c2.76 0 5.07-.91 6.76-2.47l-3.31-2.57c-.91.61-2.08.98-3.45.98-2.65 0-4.9-1.79-5.7-4.2H2.88v2.65C4.56 19.73 8.01 22 12 22z"/>
+								<path fill="currentColor" d="M6.3 13.74A6.07 6.07 0 0 1 5.98 12c0-.61.11-1.2.32-1.74V7.61H2.88A9.98 9.98 0 0 0 2 12c0 1.61.39 3.14 1.08 4.39l3.22-2.65z"/>
+								<path fill="currentColor" d="M12 5.98c1.5 0 2.85.52 3.91 1.53l2.93-2.93C17.06 2.93 14.75 2 12 2 8.01 2 4.56 4.27 2.88 7.61l3.42 2.65c.8-2.41 3.05-4.28 5.7-4.28z"/>
 							</svg>
 							<span>Sign in with Google</span>
 						</span>

@@ -47,32 +47,74 @@
   ],
   "screenshots": [
     {
-      "src": "/images/screenshots/mobile-leaderboard.png",
-      "sizes": "810x1470",
+      "src": "/images/screenshots/desktop-home.png",
+      "sizes": "2460x1640",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Leaderboard"
+      "form_factor": "wide",
+      "label": "Home"
     },
     {
-      "src": "/images/screenshots/mobile-history.png",
-      "sizes": "810x1470",
+      "src": "/images/screenshots/desktop-table.png",
+      "sizes": "2460x1640",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Game History"
+      "form_factor": "wide",
+      "label": "League Table"
     },
     {
-      "src": "/images/screenshots/mobile-outstanding.png",
-      "sizes": "810x1470",
+      "src": "/images/screenshots/desktop-fixtures.png",
+      "sizes": "2460x1640",
       "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Outstanding Games"
+      "form_factor": "wide",
+      "label": "Fixtures"
     },
     {
-      "src": "/images/screenshots/mobile-archive.png",
-      "sizes": "810x1470",
+      "src": "/images/screenshots/desktop-seasons.png",
+      "sizes": "2460x1640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Seasons"
+    },
+    {
+      "src": "/images/screenshots/desktop-profile.png",
+      "sizes": "2460x1640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "My Profile"
+    },
+    {
+      "src": "/images/screenshots/mobile-home.png",
+      "sizes": "960x1708",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Season Archive"
+      "label": "Home"
+    },
+    {
+      "src": "/images/screenshots/mobile-table.png",
+      "sizes": "960x1708",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "League Table"
+    },
+    {
+      "src": "/images/screenshots/mobile-fixtures.png",
+      "sizes": "960x1708",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Fixtures"
+    },
+    {
+      "src": "/images/screenshots/mobile-seasons.png",
+      "sizes": "960x1708",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Seasons"
+    },
+    {
+      "src": "/images/screenshots/mobile-profile.png",
+      "sizes": "960x1708",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "My Profile"
     }
   ]
 }

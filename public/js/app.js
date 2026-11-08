@@ -229,43 +229,41 @@ function setAuthenticatedUI(isAuthenticated) {
 }
 
 function computeSortedLeaderboard(statsArray, userMap) {
-	const compiled = statsArray.map((row) => {
+	if (!Array.isArray(statsArray)) return [];
+
+	// Preserves the ordering and dense `position` calculated by the API backend single source of truth
+	return statsArray.map((row, idx) => {
 		const user = userMap.get(row.playerId) || row;
 		const wins = Number(row.wins) || 0;
 		const losses = Number(row.losses) || 0;
 		const foulsOnBlack = Number(row.foulsOnBlack) || 0;
 		const ballsRemaining = Number(row.ballsRemaining) || 0;
-		const points = row.points !== undefined ? Number(row.points) : wins * 3 + losses - foulsOnBlack;
-		const played = wins + losses;
+		const points = Number(row.points) || 0;
+		const played = row.played !== undefined ? Number(row.played) : wins + losses;
+		const position = row.position !== undefined ? Number(row.position) : idx + 1;
 
 		return {
 			playerId: row.playerId || user.id,
-			name: user.name || 'Unknown',
-			team: user.team || 'My Team',
-			teamColor: user.teamColor || '#ffffff',
-			participating: user.participating !== undefined ? Boolean(user.participating) : true,
+			name: row.name || user.name || 'Unknown',
+			team: row.team || user.team || 'My Team',
+			teamColor: row.teamColor || user.teamColor || '#ffffff',
+			participating:
+				row.participating !== undefined
+					? Boolean(row.participating)
+					: user.participating !== undefined
+					? Boolean(user.participating)
+					: true,
 			wins,
 			losses,
 			foulsOnBlack,
 			ballsRemaining,
 			points,
-			played
+			played,
+			winLossRatio: row.winLossRatio,
+			position,
+			rank: position
 		};
 	});
-
-	// Official league rank order: Points DESC, Balls Remaining ASC, Fouls on Black ASC, Team ASC
-	compiled.sort((a, b) => {
-		if (b.points !== a.points) return b.points - a.points;
-		if (a.ballsRemaining !== b.ballsRemaining) return a.ballsRemaining - b.ballsRemaining;
-		if (a.foulsOnBlack !== b.foulsOnBlack) return a.foulsOnBlack - b.foulsOnBlack;
-		return (a.team || '').localeCompare(b.team || '');
-	});
-
-	compiled.forEach((item, idx) => {
-		item.rank = idx + 1;
-	});
-
-	return compiled;
 }
 
 async function fetchOutstandingGamesData() {
@@ -598,25 +596,20 @@ function renderTableView() {
 	}
 
 	const baseRows = getTableRowsForCurrentMode();
-	const sortedRows = [...baseRows];
+	let sortedRows;
 
-	const dir = state.tableSortAsc ? 1 : -1;
-	sortedRows.sort((a, b) => {
+	if (state.tableSortField === 'points') {
+		sortedRows = state.tableSortAsc ? [...baseRows].reverse() : [...baseRows];
+	} else {
+		const dir = state.tableSortAsc ? 1 : -1;
 		const f = state.tableSortField;
-		if (f === 'points') {
-			if (a.points !== b.points) return (a.points - b.points) * dir;
-			if (a.ballsRemaining !== b.ballsRemaining) return a.ballsRemaining - b.ballsRemaining;
-			return a.foulsOnBlack - b.foulsOnBlack;
-		}
-		if (f === 'ballsRemaining') {
-			if (a.ballsRemaining !== b.ballsRemaining) return (a.ballsRemaining - b.ballsRemaining) * dir;
-			return b.points - a.points;
-		}
-		if (a[f] !== b[f]) {
-			return (a[f] - b[f]) * dir;
-		}
-		return b.points - a.points;
-	});
+		sortedRows = [...baseRows].sort((a, b) => {
+			if (a[f] !== b[f]) {
+				return (a[f] - b[f]) * dir;
+			}
+			return (a.position || 0) - (b.position || 0);
+		});
+	}
 
 	document.querySelectorAll('.sort-col-btn').forEach((btn) => {
 		btn.classList.toggle('is-sorted', btn.dataset.sort === state.tableSortField);
@@ -625,9 +618,9 @@ function renderTableView() {
 	const container = document.getElementById('standings-rows-container');
 	if (container) {
 		container.innerHTML = sortedRows
-			.map((row, idx) => {
+			.map((row) => {
 				const isUser = row.playerId === currentUser.id;
-				const displayRank = state.tableSortField === 'points' && !state.tableSortAsc ? row.rank : idx + 1;
+				const displayRank = row.position;
 				return `
 					<button type="button" class="standings-row ${isUser ? 'is-user-team' : ''}" data-player-id="${escapeHTML(row.playerId)}">
 						<span class="col-rank">${displayRank}</span>
